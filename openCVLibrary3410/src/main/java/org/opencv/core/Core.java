@@ -5626,7 +5626,13 @@ public class Core {
         addSamplesDataSearchSubDirectory_0(subdir);
     }
 
-// manual port
+    public static void line(Mat graphMat, android.graphics.Point bPoint1, android.graphics.Point bPoint2, Scalar scalar, int i, int i1, int i2) {
+    }
+
+    public static void line(Mat image, Point mP1, Point mP2, Scalar scalar, int thikness) {
+    }
+
+    // manual port
 public static class MinMaxLocResult {
     public double minVal;
     public double maxVal;

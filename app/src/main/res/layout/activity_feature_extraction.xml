@@ -1,9 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".FeatureExtractionActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:id="@+id/btn_gallery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:textSize="12dp"
+        android:text="LOAD" />
+
+    <Button
+        android:id="@+id/btn_histogram"
+        android:text="H.RGB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:textSize="12dp"
+        android:layout_toRightOf="@id/btn_gallery" />
+
+    <Button
+        android:id="@+id/btn_gray_histogram"
+        android:text="H.GRAY"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:textSize="12dp"
+        android:layout_toRightOf="@id/btn_histogram" />
+
+    <Button
+        android:id="@+id/btn_contour_histogram"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@+id/btn_gray_histogram"
+        android:text="H.CONTOUR"
+        android:textSize="12dp" />
+
+    <Button
+        android:id="@+id/btn_brisk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:text="BRISK"
+        android:textSize="12dp" />
+
+    <Button
+        android:id="@+id/btn_Akaze"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@id/btn_brisk"
+        android:text="AKAZE"
+        android:textSize="12dp" />
+
+    <Button
+        android:id="@+id/btn_orb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@id/btn_Akaze"
+        android:text="ORB"
+        android:textSize="12dp" />
+
+
+
+    <ImageView
+        android:id="@+id/imv_original"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_width="160dp"
+        android:layout_height="270dp"
+        android:layout_marginTop="120dp"
+        app:srcCompat="@mipmap/ic_launcher" />
+
+    <ImageView
+        android:id="@+id/imv_imgproc"
+        android:layout_width="160dp"
+        android:layout_height="270dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="-142dp"
+        android:layout_marginTop="120dp"
+        android:layout_toRightOf="@id/imv_original"
+        app:srcCompat="@mipmap/ic_launcher" />
+
+    <TextView
+        android:id="@+id/tv_feature_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imv_original"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"
+        android:text="Feature Values" />
+
+</RelativeLayout>
