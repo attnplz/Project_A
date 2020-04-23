@@ -411,8 +411,6 @@ public class FeatureExtractionActivity extends AppCompatActivity {
     }
 
 
-
-
     private void executeORB(){
 //        Log.d("JUG", "Execute");
 //        FeatureDetector detector;
