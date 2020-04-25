@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class FeatureExtractionActivity extends AppCompatActivity {
 
     private static final String TAG = "JUG";
@@ -53,7 +52,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
     Bitmap imageBitmap, grayBitmap, contourBitmap;
     Mat sampledImgMat;
     Uri imageUri;
-    TextView tv_feature_value;
+    TextView tv_feature_value, title_image_histogram, title_feature_value;
 
     private int keypointsObject;
     private int REQUEST_CODE_GALLERRY = 100;
@@ -88,6 +87,8 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         imv_image_feature = findViewById(R.id.imv_img_feature);
 
         tv_feature_value = findViewById(R.id.tv_feature_value);
+        title_image_histogram = findViewById(R.id.title_image_histogram);
+        title_feature_value = findViewById(R.id.title_feature_value);
 
         keypointsObject = -1;
 
@@ -98,6 +99,9 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         }else{
             Toast.makeText(getApplicationContext(),"Could not load openCV", Toast.LENGTH_SHORT).show();
         }
+
+        tv_feature_value.setVisibility(View.INVISIBLE);
+        title_feature_value.setVisibility(View.INVISIBLE);
 
         btn_gallery.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,13 +114,13 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         btn_histogram.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //setVisibleView(true);
-                //histogram_grb2(sampledImgMat);
-                //imv_original.setImageBitmap(imageBitmap);
-                //Toast.makeText(getApplicationContext(),"Extracting RGB histogram features successfully", Toast.LENGTH_SHORT).show();
-
                 setVisibleView(true);
-                display_histogram(imageBitmap);
+                histogram_grb2(sampledImgMat);
+                display_histogram(imageBitmap, 3);
+                imv_original.setImageBitmap(imageBitmap);
+                Toast.makeText(getApplicationContext(),"Extracting RGB histogram features successfully", Toast.LENGTH_SHORT).show();
+                title_feature_value.setVisibility(View.VISIBLE);
+                tv_feature_value.setVisibility(View.VISIBLE);
             }
         });
 
@@ -124,9 +128,12 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 setVisibleView(false);
-                convertToGray(v);
-                histogram_gray(v);
+                convertToGray();
+                histogram_gray();
+                display_histogram(imageBitmap, 1);
                 Toast.makeText(getApplicationContext(),"Extracting Grayscale histogram features successfully", Toast.LENGTH_SHORT).show();
+                title_feature_value.setVisibility(View.VISIBLE);
+                tv_feature_value.setVisibility(View.VISIBLE);
             }
         });
 
@@ -136,6 +143,9 @@ public class FeatureExtractionActivity extends AppCompatActivity {
                 setVisibleView(false);
                 executeORB();
                 Toast.makeText(getApplicationContext(),"Extracting ORB features successfully", Toast.LENGTH_SHORT).show();
+                imv_original.setImageBitmap(imageBitmap);
+                title_feature_value.setVisibility(View.VISIBLE);
+                tv_feature_value.setVisibility(View.VISIBLE);
             }
         });
 
@@ -145,6 +155,9 @@ public class FeatureExtractionActivity extends AppCompatActivity {
                 setVisibleView(false);
                 executeBRISK();
                 Toast.makeText(getApplicationContext(),"Extracting BRISK features successfully", Toast.LENGTH_SHORT).show();
+                imv_original.setImageBitmap(imageBitmap);
+                title_feature_value.setVisibility(View.VISIBLE);
+                tv_feature_value.setVisibility(View.VISIBLE);
             }
         });
 
@@ -155,14 +168,15 @@ public class FeatureExtractionActivity extends AppCompatActivity {
 //                getConvexFeature(contoursList);
 //            }
 //        });
-
     }
 
     private void setVisibleView(Boolean visible){
         if (visible) {
             imv_image_feature.setVisibility(View.VISIBLE);
+            title_image_histogram.setVisibility(View.VISIBLE);
         }else{
             imv_image_feature.setVisibility(View.INVISIBLE);
+            title_image_histogram.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -264,7 +278,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         return bitmap;
     }
 
-    private void convertToGray(View v){
+    private void convertToGray(){
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inDither = false;
         o.inSampleSize = 4;
@@ -396,10 +410,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             hist.get(0, 0, mBuff);
 
             arr_f = mBuff;
-
             //Concatenate histogram values
-
-
             for(float s : arr_f){
                 builder.append(s).append(" ");
             }
@@ -407,7 +418,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         tv_feature_value.setText(builder.toString());
     }
 
-    private void histogram_gray(View v){
+    private void histogram_gray(){
         Mat sourceMat = new Mat();
         Utils.bitmapToMat(grayBitmap, sourceMat);
 
@@ -447,7 +458,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         tv_feature_value.setText(builder.toString());
     }
 
-    private void display_histogram(Bitmap imageBitmap){
+    private void display_histogram(Bitmap imageBitmap, int numChannel){
 
         // https://inducesmile.com/android/draw-image-histogram-in-android-with-opencv/
 
@@ -473,61 +484,72 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         List<Mat> channels = new ArrayList<>();
         Core.split(sourceMat, channels);
 
-        MatOfInt[] allChannel = new MatOfInt[]{new MatOfInt(0), new MatOfInt(1), new MatOfInt(2)};
-        Scalar[] colorScalar = new Scalar[]{new Scalar(220, 0, 0, 255), new Scalar(0, 220, 0, 255), new Scalar(0, 0, 220, 255)};
+        if (numChannel==3) {
+            MatOfInt[] allChannel = new MatOfInt[]{new MatOfInt(0), new MatOfInt(1), new MatOfInt(2)};
+            Scalar[] colorScalar = new Scalar[]{new Scalar(220, 0, 0, 255), new Scalar(0, 220, 0, 255), new Scalar(0, 0, 220, 255)};
 
-        Mat matB = new Mat(sourceSize, sourceMat.type());
-        Mat matG = new Mat(sourceSize, sourceMat.type());
-        Mat matR = new Mat(sourceSize, sourceMat.type());
-        Mat graphMat = new Mat(graphHeight, graphWidth, CvType.CV_8UC3, new Scalar(0, 0, 0));
+            Mat matB = new Mat(sourceSize, sourceMat.type());
+            Mat matG = new Mat(sourceSize, sourceMat.type());
+            Mat matR = new Mat(sourceSize, sourceMat.type());
+            Mat graphMat = new Mat(graphHeight, graphWidth, CvType.CV_8UC3, new Scalar(0, 0, 0));
 
-        //Get histogram values for each channel
-        Imgproc.calcHist(channels, allChannel[0], new Mat(), matB, hisSize, histRange);
-        Imgproc.calcHist(channels, allChannel[1], new Mat(), matG, hisSize, histRange);
-        Imgproc.calcHist(channels, allChannel[2], new Mat(), matR, hisSize, histRange);
+            //Get histogram values for each channel
+            Imgproc.calcHist(channels, allChannel[0], new Mat(), matB, hisSize, histRange);
+            Imgproc.calcHist(channels, allChannel[1], new Mat(), matG, hisSize, histRange);
+            Imgproc.calcHist(channels, allChannel[2], new Mat(), matR, hisSize, histRange);
 
-        //Normalize channel
-        Core.normalize(matB, matB, graphMat.height(), 0, Core.NORM_INF);
-        Core.normalize(matG, matG, graphMat.height(), 0, Core.NORM_INF);
-        Core.normalize(matR, matR, graphMat.height(), 0, Core.NORM_INF);
+            //Normalize channel
+            Core.normalize(matB, matB, graphMat.height(), 0, Core.NORM_INF);
+            Core.normalize(matG, matG, graphMat.height(), 0, Core.NORM_INF);
+            Core.normalize(matR, matR, graphMat.height(), 0, Core.NORM_INF);
 
-        //convert pixel value to point and draw line with points
+            //convert pixel value to point and draw line with points
+            for (int i = 0; i < histogramSize; i++){
+                //Blue component
+                org.opencv.core.Point bPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matB.get(i - 1, 0)[0])));
+                org.opencv.core.Point bPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matB.get(i, 0)[0])));
+                Imgproc.line(graphMat, bPoint1, bPoint2, colorScalar[0],2);
+                //Green component
+                org.opencv.core.Point gPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matG.get(i - 1, 0)[0])));
+                org.opencv.core.Point gPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matG.get(i, 0)[0])));
+                Imgproc.line(graphMat, gPoint1, gPoint2, colorScalar[1], 2);
+                //Red component
+                org.opencv.core.Point rPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matR.get(i - 1, 0)[0])));
+                org.opencv.core.Point rPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matR.get(i, 0)[0])));
+                Imgproc.line(graphMat, rPoint1, rPoint2, colorScalar[2], 2);
+            }
 
-        for (int i = 0; i < histogramSize; i++){
-            //Blue component
-            org.opencv.core.Point bPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matB.get(i - 1, 0)[0])));
-            org.opencv.core.Point bPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matB.get(i, 0)[0])));
-            Imgproc.line(graphMat, bPoint1, bPoint2, colorScalar[0],2);
+            //convert Mat to Bitmap
+            Bitmap graphBitmap = Bitmap.createBitmap(graphMat.cols(), graphMat.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(graphMat, graphBitmap);
+            imv_image_feature.setImageBitmap(graphBitmap);
 
-            org.opencv.core.Point gPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matG.get(i - 1, 0)[0])));
-            org.opencv.core.Point gPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matG.get(i, 0)[0])));
-            Imgproc.line(graphMat, gPoint1, gPoint2, colorScalar[1], 2);
+        }else if(numChannel==1){
+            MatOfInt[] allChannel = new MatOfInt[]{new MatOfInt(0)};
+            Scalar[] grayScalar = new Scalar[]{new Scalar(255, 255, 255, 255)};
 
-            org.opencv.core.Point rPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matR.get(i - 1, 0)[0])));
-            org.opencv.core.Point rPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matR.get(i, 0)[0])));
-            Imgproc.line(graphMat, rPoint1, rPoint2, colorScalar[2], 2);
+            Mat matGray = new Mat(sourceSize, sourceMat.type());
+            Mat graphMat = new Mat(graphHeight, graphWidth, CvType.CV_8UC3, new Scalar(0, 0, 0));
+
+            //Get histogram value for a channel
+            Imgproc.calcHist(channels, allChannel[0], new Mat(), matGray, hisSize, histRange);
+
+            //Normalize channel
+            Core.normalize(matGray, matGray, graphMat.height(), 0, Core.NORM_INF);
+
+            //convert pixel value to point and draw line with points
+            for (int i = 0; i < histogramSize; i++) {
+                //White component
+                org.opencv.core.Point bPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matGray.get(i - 1, 0)[0])));
+                org.opencv.core.Point bPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matGray.get(i, 0)[0])));
+                Imgproc.line(graphMat, bPoint1, bPoint2, grayScalar[0],2);
+            }
+
+            //convert Mat to Bitmap
+            Bitmap graphBitmap = Bitmap.createBitmap(graphMat.cols(), graphMat.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(graphMat, graphBitmap);
+            imv_image_feature.setImageBitmap(graphBitmap);
         }
-
-//        org.opencv.core.Point mP1 = new org.opencv.core.Point();
-//        org.opencv.core.Point mP2 = new org.opencv.core.Point();
-//
-//        Scalar mColorRGB[] = new Scalar[]{
-//                new Scalar(200,0,0,255), new Scalar(0,200,0,255), new Scalar(0,0,200,255)
-//        };
-//
-//        for (int c=0; c<3; c++){
-//            mP1.x = mP2.x = 20;
-//            mP1.y = 50;
-//            mP2.y = mP1.y - 30;
-//            Imgproc.line(sourceMat, mP1, mP2,colorScalar[c],3);
-//        }
-
-        //convert Mat to Bitmap
-        Bitmap graphBitmap = Bitmap.createBitmap(graphMat.cols(), graphMat.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(graphMat, graphBitmap);
-
-        //Log.d(TAG,String.valueOf(graphMat));
-        imv_image_feature.setImageBitmap(graphBitmap);
     }
 
     private void executeORB(){
