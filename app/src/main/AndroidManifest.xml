@@ -5,7 +5,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-feature android:name="android.hardware.camera2" android:required="true"/>
+
+    <uses-feature
+        android:name="android.hardware.camera2"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -14,7 +17,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".PredictionActivity"></activity>
+
+        <activity android:name=".testActivity"/>
+        <activity android:name=".CompareImages" />
+        <activity android:name=".PredictionActivity" />
         <activity android:name=".FeatureExtractionActivity" />
         <activity android:name=".PreprocessingActivity" />
         <activity android:name=".MainActivity">

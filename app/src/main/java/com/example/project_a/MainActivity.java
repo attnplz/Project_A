@@ -38,7 +38,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button btn_load, btn_preprocessing, btn_feature_extraction, btn_prediction, btn_capture;
+    Button btn_load, btn_preprocessing, btn_feature_extraction, btn_prediction, btn_capture, btn_compare;
     ImageView imv;
     Bitmap bitmap;
 
@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         btn_preprocessing = findViewById(R.id.btn_preprocessing);
         btn_feature_extraction = findViewById(R.id.btn_feature_extraction);
         btn_prediction = findViewById(R.id.btn_prediction);
+        btn_compare = findViewById(R.id.btn_compare);
         imv = findViewById(R.id.imv);
 
         btn_capture.setOnClickListener(new View.OnClickListener() {
@@ -100,6 +101,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btn_compare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, CompareImages.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

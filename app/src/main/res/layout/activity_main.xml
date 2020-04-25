@@ -45,9 +45,9 @@
         android:layout_marginTop="8dp"
         android:text="Load Image"
         android:textSize="12sp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_preprocessing"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_preprocessing"
         app:layout_constraintTop_toBottomOf="@+id/btn_capture" />
 
     <Button
@@ -57,9 +57,9 @@
         android:layout_marginTop="8dp"
         android:text="Show Preprocessing Image"
         android:textSize="12sp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_feature_extraction"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_feature_extraction"
         app:layout_constraintTop_toBottomOf="@+id/btn_load" />
 
     <Button
@@ -69,10 +69,23 @@
         android:layout_marginTop="8dp"
         android:text="Show Feature Extraction"
         android:textSize="12sp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_prediction"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_compare"
         app:layout_constraintTop_toBottomOf="@+id/btn_preprocessing" />
+
+    <Button
+        android:id="@+id/btn_compare"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="COMPARE IMAGES"
+        android:layout_marginTop="8dp"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_prediction"
+        app:layout_constraintTop_toBottomOf="@+id/btn_feature_extraction" />
 
     <Button
         android:id="@+id/btn_prediction"
@@ -85,6 +98,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_feature_extraction" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_compare" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

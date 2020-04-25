@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
 import android.graphics.Point;
 import android.media.ExifInterface;
 import android.net.Uri;
@@ -37,7 +38,6 @@ import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.utils.Converters;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ import java.util.List;
 public class FeatureExtractionActivity extends AppCompatActivity {
 
     private static final String TAG = "JUG";
-    ImageView imv_original, imv_imgproc;
+    ImageView imv_original, imv_image_feature;
     Button btn_gallery, btn_histogram, btn_gray_histogram, btn_orb, btn_brisk, btn_convex;
     Bitmap imageBitmap, grayBitmap, contourBitmap;
     Mat sampledImgMat;
@@ -82,14 +82,16 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         btn_histogram = findViewById(R.id.btn_histogram);
         btn_orb = findViewById(R.id.btn_orb);
         btn_brisk = findViewById(R.id.btn_brisk);
-        btn_convex = findViewById(R.id.btn_convex);
+        //btn_convex = findViewById(R.id.btn_convex);
 
         imv_original = findViewById(R.id.imv_original);
-        imv_imgproc = findViewById(R.id.imv_imgproc);
+        imv_image_feature = findViewById(R.id.imv_img_feature);
 
         tv_feature_value = findViewById(R.id.tv_feature_value);
 
         keypointsObject = -1;
+
+        setVisibleView(false);
 
         if(OpenCVLoader.initDebug()){
             Toast.makeText(getApplicationContext(),"OpenCV loaded successfully", Toast.LENGTH_SHORT).show();
@@ -108,41 +110,60 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         btn_histogram.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                histogram_grb2(sampledImgMat);
-                imv_imgproc.setImageBitmap(imageBitmap);
+                //setVisibleView(true);
+                //histogram_grb2(sampledImgMat);
+                //imv_original.setImageBitmap(imageBitmap);
+                //Toast.makeText(getApplicationContext(),"Extracting RGB histogram features successfully", Toast.LENGTH_SHORT).show();
+
+                setVisibleView(true);
+                display_histogram(imageBitmap);
             }
         });
 
         btn_gray_histogram.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setVisibleView(false);
                 convertToGray(v);
                 histogram_gray(v);
+                Toast.makeText(getApplicationContext(),"Extracting Grayscale histogram features successfully", Toast.LENGTH_SHORT).show();
             }
         });
 
         btn_orb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setVisibleView(false);
                 executeORB();
+                Toast.makeText(getApplicationContext(),"Extracting ORB features successfully", Toast.LENGTH_SHORT).show();
             }
         });
 
         btn_brisk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setVisibleView(false);
                 executeBRISK();
+                Toast.makeText(getApplicationContext(),"Extracting BRISK features successfully", Toast.LENGTH_SHORT).show();
             }
         });
 
-        btn_convex.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                List<MatOfPoint> contoursList = getImageContoursList();
-                getConvexFeature(contoursList);
-            }
-        });
+//        btn_convex.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                List<MatOfPoint> contoursList = getImageContoursList();
+//                getConvexFeature(contoursList);
+//            }
+//        });
 
+    }
+
+    private void setVisibleView(Boolean visible){
+        if (visible) {
+            imv_image_feature.setVisibility(View.VISIBLE);
+        }else{
+            imv_image_feature.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
@@ -267,7 +288,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         grayBitmap = Bitmap.createBitmap(width, height,Bitmap.Config.RGB_565);
         Utils.matToBitmap(grayMat, grayBitmap);
 
-        imv_imgproc.setImageBitmap(grayBitmap);
+        imv_original.setImageBitmap(grayBitmap);
     }
 
     private void histogram_grb(Mat sampledImgMat){
@@ -275,7 +296,6 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         Utils.bitmapToMat(imageBitmap, sourceMat);
 
         Size sourceSize = sourceMat.size();
-
 
         int histogramSize = 256;
         MatOfInt hisSize = new MatOfInt(histogramSize);
@@ -316,17 +336,17 @@ public class FeatureExtractionActivity extends AppCompatActivity {
 
         //convert pixel value to point and draw line with points
         for(int i = 0; i < histogramSize; i++){
-            Point bPoint1 = new Point(binWidth * (i - 1), (int) (graphHeight - Math.round(matB.get(i - 1, 0)[0])));
-            Point bPoint2 = new Point(binWidth * i, (int) (graphHeight - Math.round(matB.get(i, 0)[0])));
-            Core.line(graphMat, bPoint1, bPoint2, new Scalar(220, 0, 0, 255), 3, 8, 0);
-
-            Point gPoint1 = new Point(binWidth * (i - 1), (int) (graphHeight - Math.round(matG.get(i - 1, 0)[0])));
-            Point gPoint2 = new Point(binWidth * i, (int) (graphHeight - Math.round(matG.get(i, 0)[0])));
-            Core.line(graphMat, gPoint1, gPoint2, new Scalar(0, 220, 0, 255), 3, 8, 0);
-
-            Point rPoint1 = new Point(binWidth * (i - 1), (int) (graphHeight - Math.round(matR.get(i - 1, 0)[0])));
-            Point rPoint2 = new Point(binWidth * i, (int) (graphHeight - Math.round(matR.get(i, 0)[0])));
-            Core.line(graphMat, rPoint1, rPoint2, new Scalar(0, 0, 220, 255), 3, 8, 0);
+//            Point bPoint1 = new Point(binWidth * (i - 1), (graphHeight - Math.round(matB.get(i - 1, 0)[0])));
+//            Point bPoint2 = new Point(binWidth * i, (graphHeight - Math.round(matB.get(i, 0)[0])));
+//            Core.line(graphMat, bPoint1, bPoint2, new Scalar(220, 0, 0, 255),3);
+//
+//            Point gPoint1 = new Point(binWidth * (i - 1), (graphHeight - Math.round(matG.get(i - 1, 0)[0])));
+//            Point gPoint2 = new Point(binWidth * i, (graphHeight - Math.round(matG.get(i, 0)[0])));
+//            Core.line(graphMat, gPoint1, gPoint2, new Scalar(0, 220, 0, 255), 3);
+//
+//            Point rPoint1 = new Point(binWidth * (i - 1), (graphHeight - Math.round(matR.get(i - 1, 0)[0])));
+//            Point rPoint2 = new Point(binWidth * i, (graphHeight - Math.round(matR.get(i, 0)[0])));
+//            Core.line(graphMat, rPoint1, rPoint2, new Scalar(0, 0, 220, 255), 3);
         }
 
         //convert Mat to bitmap
@@ -334,7 +354,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         Utils.matToBitmap(graphMat, graphBitmap);
 
         // show histogram
-        imv_imgproc.setImageBitmap(graphBitmap);
+        imv_original.setImageBitmap(graphBitmap);
     }
 
     private void histogram_grb2(Mat image) {
@@ -349,6 +369,9 @@ public class FeatureExtractionActivity extends AppCompatActivity {
 
         //A float array to hold the histogram values
         float []mBuff = new float[mHistSizeNum];
+
+        //histogram value holds 3-channel histogram value
+        float []Hist = new float[mHistSizeNum * 3];
 
         //A matrix of one column and two rows holding the histogram range
         MatOfFloat histogramRanges = new MatOfFloat(0f, 256f);
@@ -369,10 +392,14 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             //set a limit to the maximum histogram value, so you can display it on your device screen
             //Core.normalize(hist, hist, sizeRgba.height/2, 0, Core.NORM_INF);
 
-            //get the histogram values for channel C
+            //get the histogram values for channel C, (hist --> mBuff)
             hist.get(0, 0, mBuff);
 
             arr_f = mBuff;
+
+            //Concatenate histogram values
+
+
             for(float s : arr_f){
                 builder.append(s).append(" ");
             }
@@ -418,6 +445,89 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             builder.append(s).append(" ");
         }
         tv_feature_value.setText(builder.toString());
+    }
+
+    private void display_histogram(Bitmap imageBitmap){
+
+        // https://inducesmile.com/android/draw-image-histogram-in-android-with-opencv/
+
+        setVisibleView(true);
+
+        int histogramSize = 256;
+        int binWidth = 3;
+        int graphHeight = imv_image_feature.getHeight();
+        int graphWidth = imv_image_feature.getWidth();
+
+        //convert from Bitmap to Mat
+        Mat sourceMat = new Mat();
+        Size sourceSize = sourceMat.size();
+        Utils.bitmapToMat(imageBitmap, sourceMat);
+
+        //Create Mat
+        MatOfFloat range = new MatOfFloat(0f, 255f);
+        MatOfFloat histRange = new MatOfFloat(range);
+        MatOfInt hisSize = new MatOfInt(histogramSize);
+
+        //Split Source Mat to 3 channels
+        Mat destinationMat = new Mat();
+        List<Mat> channels = new ArrayList<>();
+        Core.split(sourceMat, channels);
+
+        MatOfInt[] allChannel = new MatOfInt[]{new MatOfInt(0), new MatOfInt(1), new MatOfInt(2)};
+        Scalar[] colorScalar = new Scalar[]{new Scalar(220, 0, 0, 255), new Scalar(0, 220, 0, 255), new Scalar(0, 0, 220, 255)};
+
+        Mat matB = new Mat(sourceSize, sourceMat.type());
+        Mat matG = new Mat(sourceSize, sourceMat.type());
+        Mat matR = new Mat(sourceSize, sourceMat.type());
+        Mat graphMat = new Mat(graphHeight, graphWidth, CvType.CV_8UC3, new Scalar(0, 0, 0));
+
+        //Get histogram values for each channel
+        Imgproc.calcHist(channels, allChannel[0], new Mat(), matB, hisSize, histRange);
+        Imgproc.calcHist(channels, allChannel[1], new Mat(), matG, hisSize, histRange);
+        Imgproc.calcHist(channels, allChannel[2], new Mat(), matR, hisSize, histRange);
+
+        //Normalize channel
+        Core.normalize(matB, matB, graphMat.height(), 0, Core.NORM_INF);
+        Core.normalize(matG, matG, graphMat.height(), 0, Core.NORM_INF);
+        Core.normalize(matR, matR, graphMat.height(), 0, Core.NORM_INF);
+
+        //convert pixel value to point and draw line with points
+
+        for (int i = 0; i < histogramSize; i++){
+            //Blue component
+            org.opencv.core.Point bPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matB.get(i - 1, 0)[0])));
+            org.opencv.core.Point bPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matB.get(i, 0)[0])));
+            Imgproc.line(graphMat, bPoint1, bPoint2, colorScalar[0],2);
+
+            org.opencv.core.Point gPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matG.get(i - 1, 0)[0])));
+            org.opencv.core.Point gPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matG.get(i, 0)[0])));
+            Imgproc.line(graphMat, gPoint1, gPoint2, colorScalar[1], 2);
+
+            org.opencv.core.Point rPoint1 = new org.opencv.core.Point(binWidth * (i - 1), (graphHeight - (int)Math.round(matR.get(i - 1, 0)[0])));
+            org.opencv.core.Point rPoint2 = new org.opencv.core.Point(binWidth * i, (graphHeight - (int)Math.round(matR.get(i, 0)[0])));
+            Imgproc.line(graphMat, rPoint1, rPoint2, colorScalar[2], 2);
+        }
+
+//        org.opencv.core.Point mP1 = new org.opencv.core.Point();
+//        org.opencv.core.Point mP2 = new org.opencv.core.Point();
+//
+//        Scalar mColorRGB[] = new Scalar[]{
+//                new Scalar(200,0,0,255), new Scalar(0,200,0,255), new Scalar(0,0,200,255)
+//        };
+//
+//        for (int c=0; c<3; c++){
+//            mP1.x = mP2.x = 20;
+//            mP1.y = 50;
+//            mP2.y = mP1.y - 30;
+//            Imgproc.line(sourceMat, mP1, mP2,colorScalar[c],3);
+//        }
+
+        //convert Mat to Bitmap
+        Bitmap graphBitmap = Bitmap.createBitmap(graphMat.cols(), graphMat.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(graphMat, graphBitmap);
+
+        //Log.d(TAG,String.valueOf(graphMat));
+        imv_image_feature.setImageBitmap(graphBitmap);
     }
 
     private void executeORB(){
@@ -570,7 +680,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         }
 
         Bitmap temp_bitmap = convertMatToImageRGB(overlay);
-        imv_imgproc.setImageBitmap(temp_bitmap);
+        imv_original.setImageBitmap(temp_bitmap);
     }
 
 }
