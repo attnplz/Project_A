@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -28,43 +27,37 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.MSER;
-import org.opencv.features2d.ORB;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.utils.Converters;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.opencv.features2d.FeatureDetector.MSER;
 
 public class FeatureExtractionActivity extends AppCompatActivity {
 
     private static final String TAG = "JUG";
     ImageView imv_original, imv_imgproc;
-    Button btn_gallery, btn_histogram, btn_gray_histogram, getBtn_histogram;
-    Bitmap imageBitmap, grayBitmap;
+    Button btn_gallery, btn_histogram, btn_gray_histogram, btn_orb, btn_brisk, btn_convex;
+    Bitmap imageBitmap, grayBitmap, contourBitmap;
     Mat sampledImgMat;
     Uri imageUri;
     TextView tv_feature_value;
 
+    private int keypointsObject;
     private int REQUEST_CODE_GALLERRY = 100;
     private boolean src1Selected = false;
-    private int keypointsObject1;
 
     private BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -87,11 +80,16 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         btn_gallery = findViewById(R.id.btn_gallery);
         btn_gray_histogram = findViewById(R.id.btn_gray_histogram);
         btn_histogram = findViewById(R.id.btn_histogram);
+        btn_orb = findViewById(R.id.btn_orb);
+        btn_brisk = findViewById(R.id.btn_brisk);
+        btn_convex = findViewById(R.id.btn_convex);
 
         imv_original = findViewById(R.id.imv_original);
         imv_imgproc = findViewById(R.id.imv_imgproc);
 
         tv_feature_value = findViewById(R.id.tv_feature_value);
+
+        keypointsObject = -1;
 
         if(OpenCVLoader.initDebug()){
             Toast.makeText(getApplicationContext(),"OpenCV loaded successfully", Toast.LENGTH_SHORT).show();
@@ -119,7 +117,29 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 convertToGray(v);
-                histogram_gray();
+                histogram_gray(v);
+            }
+        });
+
+        btn_orb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                executeORB();
+            }
+        });
+
+        btn_brisk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                executeBRISK();
+            }
+        });
+
+        btn_convex.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<MatOfPoint> contoursList = getImageContoursList();
+                getConvexFeature(contoursList);
             }
         });
 
@@ -357,20 +377,10 @@ public class FeatureExtractionActivity extends AppCompatActivity {
                 builder.append(s).append(" ");
             }
         }
-
-//        StringBuilder builder = new StringBuilder();
-//        String[] arr = {"These","are","some","words"};
-//        for (String s : arr) {
-//            builder.append(s).append(" ");
-//            tv_feature_value.setText(builder.toString());
-//        }
-
-
-
         tv_feature_value.setText(builder.toString());
     }
 
-    private void histogram_gray(){
+    private void histogram_gray(View v){
         Mat sourceMat = new Mat();
         Utils.bitmapToMat(grayBitmap, sourceMat);
 
@@ -410,41 +420,157 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         tv_feature_value.setText(builder.toString());
     }
 
-
     private void executeORB(){
-//        Log.d("JUG", "Execute");
-//        FeatureDetector detector;
-//        DescriptorExtractor descriptorExtractor;
-//        MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
-//        Mat descriptors1 = new Mat();;
-//
-//
-//        Log.d("JUG", "Before Extract Feature");
-//        detector = FeatureDetector.create(FeatureDetector.SIFT);
-//        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.SIFT);
-//
-//
-//        Log.d("JUG", "Detect Keypoints");
-//        detector.detect(sampledImgMat, keypoints1);
-//
-//        keypointsObject1 = keypoints1.toArray().length;
-//
-//        descriptorExtractor.compute(sampledImgMat,keypoints1,descriptors1);
-//
-//        Mat src1 = new Mat(imageBitmap.getHeight(), imageBitmap.getWidth(), CvType.CV_8UC4);
-//        Bitmap image1 = Bitmap.createBitmap(src1.cols(), src1.rows(), Bitmap.Config.ARGB_8888);
-//        return image1;
-//
-//        //Bitmap image1 = Bitmap.createBitmap()
 
-//        ORB orb = ORB.create();
-//        MatOfKeyPoint keypoints = new MatOfKeyPoint();
-//        Mat descriptors = new Mat();
-//        orb.detectAndCompute(sampledImgMat, new Mat(), keypoints, descriptors)
+        MatOfKeyPoint keypoints = new MatOfKeyPoint();
+        Mat descriptors = new Mat();
 
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SURF);
+        FeatureDetector detector;
+        DescriptorExtractor descriptorExtractor;
 
+        detector = FeatureDetector.create(FeatureDetector.ORB);
+        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
 
+        detector.detect(sampledImgMat, keypoints);
 
+        keypointsObject = keypoints.toArray().length;
+
+        descriptorExtractor.compute(sampledImgMat,keypoints,descriptors);
+
+        tv_feature_value.setText("Number of keypoints : " + keypointsObject);
     }
+
+    private void executeBRISK(){
+        MatOfKeyPoint keypoints = new MatOfKeyPoint();
+        Mat descriptors = new Mat();
+
+        FeatureDetector detector;
+        DescriptorExtractor descriptorExtractor;
+
+        detector = FeatureDetector.create(FeatureDetector.BRISK);
+        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.BRISK);
+
+        detector.detect(sampledImgMat, keypoints);
+
+        keypointsObject = keypoints.toArray().length;
+
+        descriptorExtractor.compute(sampledImgMat,keypoints,descriptors);
+        tv_feature_value.setText("Number of keypoints : " + keypointsObject);
+    }
+
+    private List<MatOfPoint> getImageContoursList(){
+        //Read image to Bitmap, then convert to Mat
+        //Read size of Mat
+        int width = imageBitmap.getWidth();
+        int height = imageBitmap.getHeight();
+
+        //Create Mat
+        Mat Rgba = new Mat();
+
+        //Convert Bitmap into Mat
+        Utils.bitmapToMat(imageBitmap, Rgba);
+
+        Mat cannyEdges = new Mat();
+        Mat hierarchy = new Mat();
+        Mat contours = new Mat();
+
+        //Create A list to store all the contours
+        List<MatOfPoint> contourList = new ArrayList<MatOfPoint>();
+
+        //Image Processing
+        Imgproc.cvtColor(Rgba, Rgba, Imgproc.COLOR_BGR2GRAY);
+        //Thresholding
+        Imgproc.threshold(Rgba, Rgba, 50,255.0,Imgproc.THRESH_BINARY);
+        //Morphology
+        Mat kernalErode = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7,7));
+        Mat kernalDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5,5));
+        Imgproc.erode(Rgba, Rgba, kernalErode);
+        Imgproc.dilate(Rgba, Rgba, kernalDilate);
+        Imgproc.dilate(Rgba, Rgba, kernalDilate);
+
+        //Process Canny edge and store in cannyEdge
+        Imgproc.Canny(Rgba, cannyEdges, 10, 100);
+
+        //Finding contours
+        Imgproc.findContours(cannyEdges, contourList, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        //Create a Mat for store contour
+        contours.create(cannyEdges.rows(), cannyEdges.cols(), CvType.CV_8UC3);
+
+        //Draw contour
+        Imgproc.drawContours(contours, contourList, -1, new Scalar(255,255,255), -1);
+
+        //Converting Mat back to Bitmap
+        //contourBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        //Utils.matToBitmap(contours, contourBitmap);
+
+        //imageView.setImageBitmap(contourBitmap);
+
+        return contourList;
+    }
+
+    private void getConvexFeature(List<MatOfPoint> contours){
+        //get image
+
+        // Find the convex hull
+        List<MatOfInt> hull = new ArrayList<MatOfInt>();
+        for(int i=0; i < contours.size(); i++){
+            hull.add(new MatOfInt());
+        }
+        for(int i=0; i < contours.size(); i++){
+            Imgproc.convexHull(contours.get(i), hull.get(i));
+        }
+
+        // Convert MatOfInt to MatOfPoint for drawing convex hull
+
+        // Loop over all contours
+        List<Point[]> hullpoints = new ArrayList<Point[]>();
+        for(int i=0; i < hull.size(); i++){
+            Point[] points = new Point[hull.get(i).rows()];
+
+            // Loop over all points that need to be hulled in current contour
+            for(int j=0; j < hull.get(i).rows(); j++){
+                int index = (int)hull.get(i).get(j, 0)[0];
+
+                points[j] = new Point((int)contours.get(i).get(index, 0)[0], (int)contours.get(i).get(index, 0)[1]);
+            }
+
+            hullpoints.add(points);
+        }
+
+        // Convert Point arrays into MatOfPoint
+        List<MatOfPoint> hullmop = new ArrayList<MatOfPoint>();
+        for(int i=0; i < hullpoints.size(); i++){
+            MatOfPoint mop = new MatOfPoint();
+
+            //mop.fromArray(hullpoints.get(i));
+
+            for (int j = 0; j<hullpoints.get(i).length; j++) {
+                ArrayList<org.opencv.core.Point> pointsOrdered = new ArrayList<org.opencv.core.Point>();
+                pointsOrdered.add(new org.opencv.core.Point(hullpoints.get(i)[j].x, hullpoints.get(i)[j].y));
+
+                mop.fromList(pointsOrdered);
+
+                hullmop.add(mop);
+            }
+        }
+
+        // Draw contours + hull results
+        //Mat overlay = new Mat(binaryImage.size(), CvType.CV_8UC3);
+
+        Mat binaryImage = new Mat();
+        //Convert bitmap to Mat
+        Utils.bitmapToMat(imageBitmap, binaryImage);
+
+        Mat overlay = new Mat(binaryImage.size(), CvType.CV_8UC3);
+        Scalar color = new Scalar(0, 255, 0);   // Green
+        for(int i=0; i < contours.size(); i++){
+            //Imgproc.drawContours(overlay, contours, i, color);
+            Imgproc.drawContours(overlay, hullmop, i, color);
+        }
+
+        Bitmap temp_bitmap = convertMatToImageRGB(overlay);
+        imv_imgproc.setImageBitmap(temp_bitmap);
+    }
+
 }

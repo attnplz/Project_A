@@ -61,17 +61,6 @@
             android:textSize="12dp" />
 
         <Button
-            android:id="@+id/btn_Akaze"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="50dp"
-            android:text="AKAZE"
-            android:textSize="12dp"
-            android:layout_toRightOf="@id/btn_brisk"/>
-
-        <Button
             android:id="@+id/btn_orb"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -80,7 +69,18 @@
             android:layout_marginTop="50dp"
             android:text="ORB"
             android:textSize="12dp"
-            android:layout_toRightOf="@id/btn_Akaze"/>
+            android:layout_toRightOf="@id/btn_brisk"/>
+
+        <Button
+            android:id="@+id/btn_convex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="50dp"
+            android:text="CONVEX"
+            android:textSize="12dp"
+            android:layout_toRightOf="@id/btn_orb"/>
 
         <ImageView
             android:id="@+id/imv_original"
