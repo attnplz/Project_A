@@ -23,10 +23,19 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.BOWImgDescriptorExtractor;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -34,19 +43,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class CompareImages extends AppCompatActivity {
     private static final String TAG = "JUG";
 
     Button btn_gallery1, btn_gallery2, btn_histogram_rgb, btn_histogram_gray, btn_brisk, btn_orb;
-    ImageView imv_gallery1, imv_gallery2;
+    ImageView imv_gallery1, imv_gallery2, imv_feature_image;
 
     Mat sampledImgMat, sampledImgMat1, sampledImgMat2;
-    Bitmap imageBitmap, imageBitmap1, imageBitmap2, grayBitmap, contourBitmap;
+    Bitmap imageBitmap, imageBitmap1, imageBitmap2, grayBitmap1, grayBitmap2, mathchBitmapORB;
     Boolean src1selected, src2selected;
 
     Uri imageUri;
+    private int keypointsObject1, keypointsObject2, keypointMatches;
+    private final int MAX_MATCHES = 50;
 
     float[] histogram_img1, histogram_img2;
 
@@ -77,6 +89,7 @@ public class CompareImages extends AppCompatActivity {
 
         imv_gallery1 = findViewById(R.id.imv_gallery1);
         imv_gallery2 = findViewById(R.id.imv_gallery2);
+        imv_feature_image = findViewById(R.id.imv_feature_image);
 
         src1selected = false;
         src2selected = false;
@@ -119,7 +132,8 @@ public class CompareImages extends AppCompatActivity {
         btn_orb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                mathchBitmapORB = matching_images_ORB(sampledImgMat1, sampledImgMat2);
+                imv_feature_image.setImageBitmap(mathchBitmapORB);
             }
         });
 
@@ -285,8 +299,98 @@ public class CompareImages extends AppCompatActivity {
         return arr_hist;
     }
 
+    private Bitmap matching_images_ORB(Mat sampledImgMat1, Mat sampledImgMat2){
 
+        FeatureDetector detector;
+        MatOfKeyPoint keypoints1, keypoints2;
+        DescriptorExtractor descriptorExtractor;
+        Mat descriptors1, descriptors2;
+        DescriptorMatcher descriptorMatcher;
+        MatOfDMatch matches = new MatOfDMatch();
+        keypoints1 = new MatOfKeyPoint();
+        keypoints2 = new MatOfKeyPoint();
+        descriptors1 = new Mat();
+        descriptors2 = new Mat();
 
+        detector = FeatureDetector.create(FeatureDetector.ORB);
+        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+        descriptorMatcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 
+        //Get keypoints of 2 images
+        detector.detect(sampledImgMat1, keypoints1);
+        detector.detect(sampledImgMat2, keypoints2);
+
+        keypointsObject1 = keypoints1.toArray().length;
+        keypointsObject2 = keypoints2.toArray().length;
+
+        //Get descriptorห
+        descriptorExtractor.compute(sampledImgMat1, keypoints1, descriptors1);
+        descriptorExtractor.compute(sampledImgMat2, keypoints2, descriptors2);
+
+        //Matching 2 descriptorห
+        descriptorMatcher.match(descriptors1, descriptors2, matches);
+        keypointMatches = matches.toArray().length;
+
+        Collections.sort(matches.toList(), new Comparator<DMatch>() {
+            @Override
+            public int compare(DMatch o1, DMatch o2) {
+                if(o1.distance<o2.distance)
+                    return -1;
+                if(o1.distance>o2.distance)
+                    return 1;
+                return 0;
+            }
+        });
+
+        List<DMatch> listOfDMatch = matches.toList();
+        if(listOfDMatch.size()>MAX_MATCHES){
+            matches.fromList(listOfDMatch.subList(0,MAX_MATCHES));
+        }
+
+        float []distance = new float[matches.toList().size()];
+        float sum_distance = 0.0f;
+
+        for (int i=0; i < matches.toList().size(); i++){
+            //distance[i] = listOfDMatch.get(i).distance;
+            distance[i] = matches.toList().get(i).distance;
+            sum_distance = sum_distance + distance[i];
+        }
+        Log.d(TAG, String.valueOf(sum_distance));
+
+        //TODO: SORT DISANCE
+
+        //Create Matching image
+        Mat matchedImgMat = drawMatches(sampledImgMat1, keypoints1, sampledImgMat2, keypoints2, matches, false);
+
+        //Return Bitmap from Mat
+        Bitmap image1 = Bitmap.createBitmap(matchedImgMat.cols(), matchedImgMat.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(matchedImgMat, image1);
+        Imgproc.cvtColor(matchedImgMat, matchedImgMat, Imgproc.COLOR_BGR2RGB);
+
+        return image1;
+    }
+
+    static Mat drawMatches(Mat img1, MatOfKeyPoint key1, Mat img2, MatOfKeyPoint key2, MatOfDMatch matches, boolean imageOnly) {
+        Mat out = new Mat();
+        Mat im1 = new Mat();
+        Mat im2 = new Mat();
+        Imgproc.cvtColor(img1, im1, Imgproc.COLOR_BGR2RGB);
+        Imgproc.cvtColor(img2, im2, Imgproc.COLOR_BGR2RGB);
+        if ( imageOnly){
+            MatOfDMatch emptyMatch = new MatOfDMatch();
+            MatOfKeyPoint emptyKey1 = new MatOfKeyPoint();
+            MatOfKeyPoint emptyKey2 = new MatOfKeyPoint();
+            Features2d.drawMatches(im1, emptyKey1, im2, emptyKey2, emptyMatch, out);
+        } else {
+            Features2d.drawMatches(im1, key1, im2, key2, matches, out);
+        }
+        Bitmap bmp = Bitmap.createBitmap(out.cols(), out.rows(), Bitmap.Config.ARGB_8888);
+        Imgproc.cvtColor(out, out, Imgproc.COLOR_BGR2RGB);
+        //Core.putText(out, "FRAME", new Point(img1.width() / 2,30), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0,255,255),3);
+        //Core.putText(out, "MATCHED", new Point(img1.width() + img2.width() / 2,30), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255,0,0),3);
+        return out;
+    }
 
 }
+
+
