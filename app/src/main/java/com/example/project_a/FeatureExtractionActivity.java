@@ -429,7 +429,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
 
         List<Mat> channels = new ArrayList<>();
 
-        MatOfFloat range = new MatOfFloat(0f, 255f);
+        MatOfFloat range = new MatOfFloat(0f, 256f);
         MatOfFloat histRange = new MatOfFloat(range);
 
         Core.split(sourceMat, channels);
