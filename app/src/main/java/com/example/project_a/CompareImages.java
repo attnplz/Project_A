@@ -357,7 +357,7 @@ public class CompareImages extends AppCompatActivity {
         }
         Log.d(TAG, String.valueOf(sum_distance));
 
-        //TODO: SORT DISANCE
+        //TODO: SORT DISANCEd
 
         //Create Matching image
         Mat matchedImgMat = drawMatches(sampledImgMat1, keypoints1, sampledImgMat2, keypoints2, matches, false);
