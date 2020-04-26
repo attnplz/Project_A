@@ -72,8 +72,8 @@ public class CompareImages extends AppCompatActivity {
 
         btn_gallery1 = findViewById(R.id.btn_gallery1);
         btn_gallery2 = findViewById(R.id.btn_gallery2);
-
         btn_histogram_rgb = findViewById(R.id.btn_histogram_rgb);
+        btn_orb = findViewById(R.id.btn_orb);
 
         imv_gallery1 = findViewById(R.id.imv_gallery1);
         imv_gallery2 = findViewById(R.id.imv_gallery2);
@@ -116,6 +116,15 @@ public class CompareImages extends AppCompatActivity {
                 }
             }
         });
+        btn_orb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+
+
     }
 //
     @Override
