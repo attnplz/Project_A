@@ -21,6 +21,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.project_a.image_classification.DistanceCalculation;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -143,6 +145,8 @@ public class CompareImages extends AppCompatActivity {
                 tv_title_feature.setText("Histogram of RGB image");
                 histogram_img1 = get_histogram_rgb(sampledImgMat1);
                 histogram_img2 = get_histogram_rgb(sampledImgMat2);
+                tv_feature_description.setText(displayDistanceDetails(histogram_img1, histogram_img2));
+                Toast.makeText(getApplicationContext(),"Extracting histogram feature successfully", Toast.LENGTH_SHORT).show();
             }
         });
         btn_histogram_gray.setOnClickListener(new View.OnClickListener() {
@@ -151,16 +155,17 @@ public class CompareImages extends AppCompatActivity {
                 imv_feature_image2.setVisibility(View.VISIBLE);
                 grayBitmap1 = convertToGray(imageBitmap1);
                 grayBitmap2 = convertToGray(imageBitmap2);
-
-                histogram_gray_img1 = get_histogram_gray(grayBitmap1);
-                histogram_gray_img2 = get_histogram_gray(grayBitmap2);
+                imv_gallery1.setImageBitmap(grayBitmap1);
+                imv_gallery2.setImageBitmap(grayBitmap2);
 
                 display_histogram(grayBitmap1, 1, imv_feature_image);
                 display_histogram(grayBitmap2, 1, imv_feature_image2);
 
                 tv_title_feature.setText("Histogram of grayscale image");
-                imv_gallery1.setImageBitmap(grayBitmap1);
-                imv_gallery2.setImageBitmap(grayBitmap2);
+                histogram_gray_img1 = get_histogram_gray(grayBitmap1);
+                histogram_gray_img2 = get_histogram_gray(grayBitmap2);
+                tv_feature_description.setText(displayDistanceDetails(histogram_gray_img1, histogram_gray_img2));
+                Toast.makeText(getApplicationContext(),"Extracting histogram feature successfully", Toast.LENGTH_SHORT).show();
             }
         });
         btn_brisk.setOnClickListener(new View.OnClickListener() {
@@ -616,6 +621,31 @@ public class CompareImages extends AppCompatActivity {
         }
     }
 
+    private String displayDistanceDetails(float[] hist1, float[] hist2){
+        StringBuilder builder = new StringBuilder();
+
+        DistanceCalculation distance = new DistanceCalculation(hist1, hist2);
+        float euclidean = distance.euclideanDistance(hist1, hist2);
+        float intersection = distance.intersectionDistance(hist1, hist2);
+        float correlation = distance.correlationDistance(hist1, hist2);
+        float chisquare = distance.chiSquareDistance(hist1, hist2);
+
+        builder.append("Distance values : ");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("Euclidean Distance values : ");
+        builder.append(euclidean);
+        builder.append(System.getProperty("line.separator"));
+        builder.append("Histogram intersection values : ");
+        builder.append(intersection);
+        builder.append(System.getProperty("line.separator"));
+        builder.append("Histogram correlation values : ");
+        builder.append(correlation);
+        builder.append(System.getProperty("line.separator"));
+        builder.append("Histogram Chi-square values : ");
+        builder.append(chisquare);
+
+        return builder.toString();
+    }
 }
 
 
