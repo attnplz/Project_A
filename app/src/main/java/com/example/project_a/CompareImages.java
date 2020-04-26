@@ -133,6 +133,7 @@ public class CompareImages extends AppCompatActivity {
         btn_histogram_rgb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                imv_feature_image2.setVisibility(View.VISIBLE);
                 imv_gallery1.setImageBitmap(imageBitmap1);
                 imv_gallery2.setImageBitmap(imageBitmap2);
 
@@ -147,6 +148,7 @@ public class CompareImages extends AppCompatActivity {
         btn_histogram_gray.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                imv_feature_image2.setVisibility(View.VISIBLE);
                 grayBitmap1 = convertToGray(imageBitmap1);
                 grayBitmap2 = convertToGray(imageBitmap2);
 
@@ -164,6 +166,7 @@ public class CompareImages extends AppCompatActivity {
         btn_brisk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                imv_feature_image2.setVisibility(View.INVISIBLE);
                 imv_gallery1.setImageBitmap(imageBitmap1);
                 imv_gallery2.setImageBitmap(imageBitmap2);
 
@@ -188,6 +191,7 @@ public class CompareImages extends AppCompatActivity {
         btn_orb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                imv_feature_image2.setVisibility(View.INVISIBLE);
                 imv_gallery1.setImageBitmap(imageBitmap1);
                 imv_gallery2.setImageBitmap(imageBitmap2);
 
