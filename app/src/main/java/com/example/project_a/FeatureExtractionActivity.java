@@ -28,6 +28,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
@@ -36,6 +37,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -141,7 +143,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 setVisibleView(false);
-                executeORB();
+                executeORB_BRISK(sampledImgMat, "ORB");
                 Toast.makeText(getApplicationContext(),"Extracting ORB features successfully", Toast.LENGTH_SHORT).show();
                 imv_original.setImageBitmap(imageBitmap);
                 title_feature_value.setVisibility(View.VISIBLE);
@@ -153,7 +155,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 setVisibleView(false);
-                executeBRISK();
+                executeORB_BRISK(sampledImgMat, "BRISK");
                 Toast.makeText(getApplicationContext(),"Extracting BRISK features successfully", Toast.LENGTH_SHORT).show();
                 imv_original.setImageBitmap(imageBitmap);
                 title_feature_value.setVisibility(View.VISIBLE);
@@ -552,16 +554,21 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         }
     }
 
-    private void executeORB(){
+    private void executeORB_BRISK(Mat sampledImgMat, String Method){
 
         MatOfKeyPoint keypoints = new MatOfKeyPoint();
         Mat descriptors = new Mat();
 
-        FeatureDetector detector;
-        DescriptorExtractor descriptorExtractor;
+        FeatureDetector detector = null;
+        DescriptorExtractor descriptorExtractor = null;
 
-        detector = FeatureDetector.create(FeatureDetector.ORB);
-        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+        if(Method.equals("ORB")){
+            detector = FeatureDetector.create(FeatureDetector.ORB);
+            descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+        }else if(Method.equals("BRISK")){
+            detector = FeatureDetector.create(FeatureDetector.BRISK);
+            descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.BRISK);
+        }
 
         detector.detect(sampledImgMat, keypoints);
 
@@ -569,24 +576,6 @@ public class FeatureExtractionActivity extends AppCompatActivity {
 
         descriptorExtractor.compute(sampledImgMat,keypoints,descriptors);
 
-        tv_feature_value.setText("Number of keypoints : " + keypointsObject);
-    }
-
-    private void executeBRISK(){
-        MatOfKeyPoint keypoints = new MatOfKeyPoint();
-        Mat descriptors = new Mat();
-
-        FeatureDetector detector;
-        DescriptorExtractor descriptorExtractor;
-
-        detector = FeatureDetector.create(FeatureDetector.BRISK);
-        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.BRISK);
-
-        detector.detect(sampledImgMat, keypoints);
-
-        keypointsObject = keypoints.toArray().length;
-
-        descriptorExtractor.compute(sampledImgMat,keypoints,descriptors);
         tv_feature_value.setText("Number of keypoints : " + keypointsObject);
     }
 
