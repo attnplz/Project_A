@@ -406,6 +406,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
             Imgproc.calcHist(Arrays.asList(image), mChannels[c], mask, hist, mHistSize, histogramRanges);
 
             //set a limit to the maximum histogram value, so you can display it on your device screen
+            //Core.normalize(hist, hist, image.height()/2, 0, Core.NORM_INF);
             //Core.normalize(hist, hist, sizeRgba.height/2, 0, Core.NORM_INF);
 
             //get the histogram values for channel C, (hist --> mBuff)
@@ -477,7 +478,7 @@ public class FeatureExtractionActivity extends AppCompatActivity {
         Utils.bitmapToMat(imageBitmap, sourceMat);
 
         //Create Mat
-        MatOfFloat range = new MatOfFloat(0f, 255f);
+        MatOfFloat range = new MatOfFloat(0f, 256f);
         MatOfFloat histRange = new MatOfFloat(range);
         MatOfInt hisSize = new MatOfInt(histogramSize);
 

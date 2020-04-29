@@ -493,8 +493,21 @@ public class PredictionActivity extends AppCompatActivity {
 
     private Properties set_all_image_files_class(){
         Properties prop = new Properties();
-        prop.setProperty("20200422_042737.jpg","SCISSORS");
-        prop.setProperty("20200422_043006.jpg","HAMMER");
+        prop.setProperty("20200430_044001.jpg","PAPER");
+        prop.setProperty("20200430_044002.jpg","PAPER");
+        prop.setProperty("20200430_044003.jpg","PAPER");
+        prop.setProperty("20200430_044004.jpg","PAPER");
+        prop.setProperty("20200430_044005.jpg","PAPER");
+        prop.setProperty("20200430_044006.jpg","HAMMER");
+        prop.setProperty("20200430_044007.jpg","HAMMER");
+        prop.setProperty("20200430_044008.jpg","HAMMER");
+        prop.setProperty("20200430_044009.jpg","HAMMER");
+        prop.setProperty("20200430_044010.jpg","HAMMER");
+        prop.setProperty("20200430_044011.jpg","SCISSORS");
+        prop.setProperty("20200430_044012.jpg","SCISSORS");
+        prop.setProperty("20200430_044013.jpg","SCISSORS");
+        prop.setProperty("20200430_044014.jpg","SCISSORS");
+        prop.setProperty("20200430_044015.jpg","SCISSORS");
         return prop;
     }
 

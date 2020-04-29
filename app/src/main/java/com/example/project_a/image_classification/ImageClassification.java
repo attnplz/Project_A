@@ -212,19 +212,19 @@ public class ImageClassification {
     }
 
     private String determine_class_by_keypoints_descriptor(float average_ORB_distance_hammer,float average_ORB_distance_scissors, float average_ORB_distance_paper){
-        float Max_distance = -99999.0f;
+        float Min_distance = 99999.0f;
         String class_by_decriptor = "";
 
-        if(average_ORB_distance_hammer > Max_distance){
-            Max_distance = average_ORB_distance_hammer;
+        if(average_ORB_distance_hammer < Min_distance){
+            Min_distance = average_ORB_distance_hammer;
             class_by_decriptor = "HAMMER";
         }
-        if(average_ORB_distance_scissors > Max_distance){
-            Max_distance = average_ORB_distance_scissors;
+        if(average_ORB_distance_scissors < Min_distance){
+            Min_distance = average_ORB_distance_scissors;
             class_by_decriptor = "SCISSORS";
         }
-        if(average_ORB_distance_paper > Max_distance){
-            Max_distance = average_ORB_distance_paper;
+        if(average_ORB_distance_paper < Min_distance){
+            Min_distance = average_ORB_distance_paper;
             class_by_decriptor = "PAPER";
         }
         return class_by_decriptor;
