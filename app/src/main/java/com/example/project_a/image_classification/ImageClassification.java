@@ -37,8 +37,8 @@ public class ImageClassification {
     float average_ORB_distance_scissors;
     float average_ORB_distance_paper;
 
-    String Determine_Class_histogram;
-    String Determine_Class_keypointsdescriptor;
+    public String Determine_Class_histogram;
+    public String Determine_Class_keypointsdescriptor;
 
     public ImageClassification(float[] input_feature, String extractedfeatures_hammer, String extractedfeatures_scissors,
                                String extractedfeatures_paper, MatOfKeyPoint keypointsORB_input_feature, Mat descriptorsORB_input_feature,

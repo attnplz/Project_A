@@ -17,6 +17,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
@@ -24,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONException;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -57,12 +57,13 @@ public class PredictionActivity extends AppCompatActivity {
     private int REQUEST_CODE_GALLERRY = 100;
 
     private TextView tv;
-    Button btn_gallery, btn_predict;
+    Button btn_gallery, btn_predict_histogram, btn_predict_keypointsdescriptor;
     Uri imageUri;
-    ImageView imv_original;
+    ImageView imv_original, imv_predicted_img;
     Mat sampledImgMat;
     Bitmap imageBitmap, grayBitmap;
     String extractedfeatures_hammer, extractedfeatures_scissors, extractedfeatures_paper;
+    TextView tv_predicted_class;
 
     ArrayList<String> listOfAllImages;
     ArrayList<String> listOf_ProcessedImagesFile;
@@ -95,8 +96,11 @@ public class PredictionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_prediction);
 
         btn_gallery = findViewById(R.id.btn_gallery);
-        btn_predict = findViewById(R.id.btn_predict);
+        btn_predict_histogram = findViewById(R.id.btn_predict_histogram);
+        btn_predict_keypointsdescriptor = findViewById(R.id.btn_predict_keypointsdescriptor);
         imv_original = findViewById(R.id.imv_original);
+        imv_predicted_img = findViewById(R.id.imv_predicted_img);
+        tv_predicted_class = findViewById(R.id.tv_predicted_class);
 
         if(OpenCVLoader.initDebug()){
             Toast.makeText(getApplicationContext(),"OpenCV loaded successfully", Toast.LENGTH_SHORT).show();
@@ -112,34 +116,43 @@ public class PredictionActivity extends AppCompatActivity {
             }
         });
 
-        btn_predict.setOnClickListener(new View.OnClickListener() {
+        btn_predict_histogram.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Feature extraction
-                grayBitmap = convertToGray(imageBitmap);
-                color_histogram_feature = get_histogram_rgb(sampledImgMat);
-                gray_histogram_feature = get_histogram_gray(grayBitmap);
-
-                //Get histogram features
-                image_features = new float[color_histogram_feature.length + gray_histogram_feature.length];
-                System.arraycopy(color_histogram_feature, 0, image_features, 0, color_histogram_feature.length);
-                System.arraycopy(gray_histogram_feature,0,image_features,color_histogram_feature.length, gray_histogram_feature.length);
-
-                //Get keypoints, descriptors (ORB)
-                get_ORB_keypoint_descriptor(sampledImgMat);
-                get_ORB_keypoint_descriptor_all_images(listOfAllImages);
-
-                //Get keypoints, descriptors (BRISK)
-                //get_BRISK_keypoint_descriptor(sampledImgMat);
-                //get_BRISK_keypoint_descriptor_all_images(listOfAllImages);
-
-                extractedfeatures_hammer = get_normalized_data_from_file("HAMMER");    //Hammer
-                extractedfeatures_scissors = get_normalized_data_from_file("SCISSORS");    //Scissors
-                extractedfeatures_paper = get_normalized_data_from_file("PAPER");    //Paper
-
                 String PredictionMethod = "HISTOGRAM";        //HISTOGRAM, KEYPOINTSDESCRIPTOR
                 ImageClassification imageClassification = new ImageClassification(image_features, extractedfeatures_hammer, extractedfeatures_scissors, extractedfeatures_paper,
                         keypointsORB, descriptorsORB, listOf_ProcessedImagesFile, listOfAllImages_Class, keypointsORB_all_images,descriptorsORB_all_images,PredictionMethod);
+                String Determine_Class_histogram = imageClassification.Determine_Class_histogram;
+                tv_predicted_class.setText("PREDICTED CLASS : " + Determine_Class_histogram);
+                if (Determine_Class_histogram.equals("HAMMER")){
+                    imv_predicted_img.setImageResource(R.drawable.rock);
+                }
+                if (Determine_Class_histogram.equals("PAPER")){
+                    imv_predicted_img.setImageResource(R.drawable.paper);
+                }
+                if (Determine_Class_histogram.equals("SCISSORS")){
+                    imv_predicted_img.setImageResource(R.drawable.scissors);
+                }
+            }
+        });
+
+        btn_predict_keypointsdescriptor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String PredictionMethod = "KEYPOINTSDESCRIPTOR";        //HISTOGRAM, KEYPOINTSDESCRIPTOR
+                ImageClassification imageClassification = new ImageClassification(image_features, extractedfeatures_hammer, extractedfeatures_scissors, extractedfeatures_paper,
+                        keypointsORB, descriptorsORB, listOf_ProcessedImagesFile, listOfAllImages_Class, keypointsORB_all_images,descriptorsORB_all_images,PredictionMethod);
+                String Determine_Class_histogram = imageClassification.Determine_Class_keypointsdescriptor;
+                tv_predicted_class.setText("PREDICTED CLASS : " + Determine_Class_histogram);
+                if (Determine_Class_histogram.equals("HAMMER")){
+                    imv_predicted_img.setImageResource(R.drawable.rock);
+                }
+                if (Determine_Class_histogram.equals("PAPER")){
+                    imv_predicted_img.setImageResource(R.drawable.paper);
+                }
+                if (Determine_Class_histogram.equals("SCISSORS")){
+                    imv_predicted_img.setImageResource(R.drawable.scissors);
+                }
             }
         });
     }
@@ -170,6 +183,24 @@ public class PredictionActivity extends AppCompatActivity {
 
             //Display image in imageView
             imv_original.setImageBitmap(imageBitmap);
+
+            //*** EXTRACT FEATURE ****
+            grayBitmap = convertToGray(imageBitmap);
+            color_histogram_feature = get_histogram_rgb(sampledImgMat);
+            gray_histogram_feature = get_histogram_gray(grayBitmap);
+
+            //Get histogram features
+            image_features = new float[color_histogram_feature.length + gray_histogram_feature.length];
+            System.arraycopy(color_histogram_feature, 0, image_features, 0, color_histogram_feature.length);
+            System.arraycopy(gray_histogram_feature,0,image_features,color_histogram_feature.length, gray_histogram_feature.length);
+
+            //Get keypoints, descriptors (ORB)
+            get_ORB_keypoint_descriptor(sampledImgMat);
+            get_ORB_keypoint_descriptor_all_images(listOfAllImages);
+
+            extractedfeatures_hammer = get_normalized_data_from_file("HAMMER");    //Hammer
+            extractedfeatures_scissors = get_normalized_data_from_file("SCISSORS");    //Scissors
+            extractedfeatures_paper = get_normalized_data_from_file("PAPER");    //Paper
         }
     }
 
@@ -339,8 +370,17 @@ public class PredictionActivity extends AppCompatActivity {
             //set a limit to the maximum histogram value, so you can display it on your device screen
             //Core.normalize(hist, hist, sizeRgba.height/2, 0, Core.NORM_INF);
 
+
             //get the histogram values for channel C, (hist --> mBuff)
             hist.get(0, 0, mBuff);
+
+            //Normalization with size of image
+            float sum_value = 0.0f;
+            for(int i=0;i<mBuff.length;i++){
+                mBuff[i] /= (image.rows()*image.cols());
+                sum_value+=mBuff[i];
+            }
+            //Log.d(TAG, String.valueOf(sum_value));
 
             //Concatenate histogram values
             int fal = arr_hist.length;
@@ -350,7 +390,6 @@ public class PredictionActivity extends AppCompatActivity {
             System.arraycopy(mBuff,0,result,fal,sal);
             arr_hist = result;
         }
-
         //Return histogram values
         return arr_hist;
     }
@@ -384,6 +423,14 @@ public class PredictionActivity extends AppCompatActivity {
 
         //Normalize channel
         //Core.normalize(matB, matB, graphMat.height(), 0, Core.NORM_INF);
+
+        //Normalization with size of image
+        float sum_value = 0.0f;
+        for(int i=0;i<mBuff.length;i++){
+            mBuff[i] /= (sourceMat.rows()*sourceMat.cols());
+            sum_value+=mBuff[i];
+        }
+        //Log.d(TAG, String.valueOf(sum_value));
 
         float[] arr_hist = mBuff;
 

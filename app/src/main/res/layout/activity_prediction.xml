@@ -13,25 +13,38 @@
 
         <Button
             android:id="@+id/btn_gallery"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="0dp"
+
             android:text="LOAD"
             android:textSize="12dp" />
 
         <Button
-            android:id="@+id/btn_predict"
-            android:layout_width="wrap_content"
+            android:id="@+id/btn_predict_histogram"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginLeft="5dp"
-            android:layout_toEndOf="@+id/btn_gallery"
-            android:layout_toRightOf="@+id/btn_gallery"
-            android:layout_marginTop="5dp"
-            android:text="PREDICT"
+            android:layout_marginTop="50dp"
+            android:text="PREDICT BY HISTOGRAM"
             android:textSize="12dp" />
+
+        <Button
+            android:id="@+id/btn_predict_keypointsdescriptor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:text="PREDICT BY MATCHING DESCRIPTORS"
+            android:textSize="12dp" />
+
+        <TextView
+            android:id="@+id/tv_predicted_class"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="PREDICTED CLASS : "
+            android:layout_marginTop="160dp"
+            android:textSize="12dp"
+            android:gravity="center"/>
     </RelativeLayout>
 
     <ScrollView
@@ -44,7 +57,8 @@
             android:orientation="horizontal"
             android:layout_marginTop="2dp"
             android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp">
+            android:layout_marginRight="5dp"
+            android:layout_gravity="center">
 
             <ImageView
                 android:id="@+id/imv_original"
@@ -56,7 +70,7 @@
                 app:srcCompat="@mipmap/ic_launcher" />
 
             <ImageView
-                android:id="@+id/imv_image_result"
+                android:id="@+id/imv_predicted_img"
                 android:layout_width="160dp"
                 android:layout_height="270dp"
                 android:layout_marginStart="10dp"
@@ -66,5 +80,7 @@
         </LinearLayout>
 
     </ScrollView>
+
+
 
 </LinearLayout>
