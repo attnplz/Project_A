@@ -10,7 +10,7 @@ import org.opencv.core.Mat;
 public class DistanceCalculation {
     private float[] vector1;
     private float[] vector2;
-    private float euclidean_distance_value;
+    private double euclidean_distance_value;
 
 
     public DistanceCalculation(float[] vector1, float[] vector2){
@@ -60,10 +60,14 @@ public class DistanceCalculation {
 
         for(int i = 0; i<vector1.length; i++){
             numerator += (vector1[i] - mean_vector1) * (vector2[i] - mean_vector2);
-            temp1 += (float) Math.pow(vector1[i] - mean_vector1,2);
-            temp2 += (float) Math.pow(vector2[i] - mean_vector2,2);
+            temp1 += (float)Math.pow(vector1[i] - mean_vector1,2);
+            temp2 += (float)Math.pow(vector2[i] - mean_vector2,2);
         }
-        distance = numerator/ (float) Math.sqrt(temp1 * temp2);
+        if (temp1==0 || temp2==0){
+            distance = 0;
+        }else {
+            distance = numerator / (float) Math.sqrt(temp1 * temp2);
+        }
         return distance;
     }
 

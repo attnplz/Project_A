@@ -1,253 +1,192 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.example.project_a.image_classification;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Scanner;
+import android.util.Log;
 
-/**
- *
- * @author TongC
- */
+import java.lang.reflect.Array;
+import java.util.Scanner;
+import com.example.project_a.image_classification.DistanceCalculation;
+
 public class ProcessData {
 
-    public static void main(String[] args) {
-        
-        //normalization and return a new file in the project folder
-        normalization();
-        
-        //normalization with input and return an array
-        Double[] result = improveData(new Double[] {111.0,112.0,113.0,114.0,115.0});
-        for (int i=0; i<result.length; i++) {
-            System.out.print(result[i]+" ");
-        }
+    float[][] feature_vectors;
+    float[][] normalized_feature_vectors;
+    int cntFeature = 0;
+    int cntLine = 0;
+    float[] mean_vector;
+    float[] std_vector;
+
+    float[] input_vector;
+    float[] normalized_input_vector;
+
+    float[] distanceCalculation_euclideanDistance;
+    float[] distanceCalculation_intersectionDistance;
+    float[] distanceCalculation_chiSquareDistance;
+    float[] distanceCalculation_correlationDistance;
+
+    float average_euclidean_distance_vector;
+    float average_intersectionDistance_vector;
+    float average_chiSquareDistance_vector;
+    float average_correlationDistance_vector;
+
+    float total_average_distance_vector;
+
+    public ProcessData(String sData, float[] input_vector){
+        this.input_vector = input_vector;
+
+        //Preprocess for raw feature vectors
+        createFeatureVectors(sData);
+        calculateMeanVector(feature_vectors);
+        calculateSDVector(feature_vectors, mean_vector);
+
+        //Get normalized feature vectors, normalized input vector
+        normalizedData(feature_vectors, mean_vector, std_vector);
+        normalize_input_feature(this.input_vector, mean_vector, std_vector);
+        calculate_Histogram_Distance(normalized_input_vector, normalized_feature_vectors);
+        calculate_Average_Histogram_Distance(distanceCalculation_euclideanDistance, distanceCalculation_intersectionDistance, distanceCalculation_chiSquareDistance, distanceCalculation_correlationDistance);
     }
     
     //the output is file with new data that normalizated
-    public static void normalization() {
-       
-        //phase1 virable extract every data that nesscery from file
-        int cntFeature =0 ;
-        int cntLine =0 ;
-        String[] a ;
-        
-        try {
-             //phase1
-             //count  a number of features and lines
-             File file = new File("dataset.txt");
-             Scanner sc = new Scanner(file);
-             while (sc.hasNextLine()) {
-                    a =  sc.nextLine().split("\\s");
-                    cntFeature = a.length;
-                    cntLine++;
-             } 
-              sc.close();
-             
-              //create a array that contain every feature
-              Double[][] feature = new Double[cntFeature][cntLine];
-  
-              //phase2 process a file
-               RandomAccessFile fileA = new RandomAccessFile("dataset.txt", "r");
-               String[] line ;
-               for(int i=0;i<cntLine;i++){
-                    
-                     line = fileA.readLine().split("\\s");
-                    
-                    for(int j=0;j<line.length;j++) {
-          
-                              feature[j][i] = Double.parseDouble(line[j]);
-                              
-                    }
-               }
-               
-               //print it out
-               Double[] theFeature = new Double[cntLine];
-               for(int i=0;i<cntFeature;i++){
-                   // System.out.println(""+(i+1)+" feature");
-                    
-                    //get the pre data into array(theFeature) for calculate SD and MEAN
-                    for(int j=0;j<cntLine;j++) {
-                        theFeature[j] = feature[i][j] ;
-                    }
-                    
-                    //print out a 12 data in one feature
-                    /**
-                    for(int j=0;j<cntLine;j++) {
-                        System.out.println(theFeature[j]);
-                    }
-               **/    
-                    //print out a SD and Mean of 12 Data
-                    double mean = calculateMean(theFeature) ;
-                    double SD = calculateSD(theFeature) ;
-                    //System.out.print("Mean : "); System.out.println(mean);
-                    //System.out.print("SD :");System.out.println(SD);
-                    //System.out.print("********************************************");
-                    
-                    
-                    //improve a data by nomalization data
-                    for(int j=0;j<cntLine;j++) {
-                        feature[i][j] = (feature[i][j]-mean)/SD ;
-                    }
-                    
-               } 
-               
-               //create new file for store an improve data
-               File newFile = new File("newData.txt");
-               PrintWriter pw = new PrintWriter(newFile);
-               String row  = null;
-               
-               for(int i=0 ; i <cntLine ;i++) {
-                   row = null;
-                   for(int j=0;j<cntFeature;j++) {
-                       if(j == (cntFeature-1)) {
-                           
-                           //case : is the last data of row
-                           pw.println(row+feature[j][i]+"\n");
-                       
-                       } else {
-                           if(row == null) {
-                           row = ""+feature[j][i]+" ";
-                           }else{ 
-                           row += ""+feature[j][i]+" " ;
-                           }
-                       }
-                   }
-                   
-               }
-               pw.close();
-               
-         } catch(IOException e) {
-             e.printStackTrace();
-         }
+    private void createFeatureVectors(String sData) {
+        String[] a;
+        String[] b;
+        Scanner scanner;
+
+        //Counting the number of features and lines
+        scanner = new Scanner(sData);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            a = line.split("n");
+            cntLine = a.length;
+            b = a[0].split("\\s");
+            cntFeature = b.length;
+        }
+        scanner.close();
+
+        //create a array that contain every feature (Un-normalized data)
+        feature_vectors = new float[cntLine][cntFeature];
+        scanner = new Scanner(sData);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            String[] lines;
+            a = line.split("n");
+            //process each line
+            for (int i = 0; i < a.length; i++) {
+                lines = a[i].split("\\s");
+                //process each feature
+                for (int j = 0; j < lines.length; j++) {
+                    feature_vectors[i][j] = Float.parseFloat(lines[j]);
+                }
+            }
+        }
+        scanner.close();
+        //Log.d("JUG", String.valueOf(feature_vectors));
     }
     
-    public static double calculateSD(Double[] numArray)
+    private void calculateSDVector(float[][] feature_vectors, float[] mean_vector)
     {
-        double sum = 0.0, standardDeviation = 0.0;
-        int length = numArray.length;
+        int row = feature_vectors.length;
+        int col = feature_vectors[0].length;
+        std_vector = new float[col];
+        float[] temp_features = new float[col];
+        for(int i = 0; i<col; i++){temp_features[i]=0.0f;}
 
-        for(double num : numArray) {
-            sum += num;
+        for(int i = 0; i < row; i++){
+            for (int j = 0; j < col; j++){
+                temp_features[j] += Math.pow(feature_vectors[i][j] - mean_vector[j],2);
+            }
         }
 
-        double mean = sum/length;
-
-        for(double num: numArray) {
-            standardDeviation += Math.pow(num - mean, 2);
-        }
-
-        return Math.sqrt(standardDeviation/length);
+        for(int i = 0; i<col; i++){temp_features[i] = (float)Math.sqrt(temp_features[i]/=(row-1));}
+        this.std_vector = temp_features;
     }
     
-    public static double calculateMean(Double[] numArray)
+    private void calculateMeanVector(float[][] feature_vectors)
     {
-        double sum = 0.0, standardDeviation = 0.0;
-        int length = numArray.length;
+        int row = feature_vectors.length;
+        int col = feature_vectors[0].length;
+        mean_vector = new float[col];
+        float[] sum_features = new float[col];
+        for(int i = 0; i<col; i++){sum_features[i]=0.0f;}
 
-        for(double num : numArray) {
-            sum += num;
+        for(int i = 0; i < row; i++){
+            for (int j = 0; j < col; j++){
+                sum_features[j] += feature_vectors[i][j];
+            }
         }
 
-        double mean = sum/length;
-
-        return mean;
+        for(int i = 0; i<col; i++){sum_features[i]/=row;}
+        this.mean_vector = sum_features;
     }
-    
-    public static Double[] improveData(Double[] b) {
-    
-        //phase1 virable extract every data that nesscery from file
-        int cntFeature =0 ;
-        int cntLine =0 ;
-        String[] a ;
-        Double[] result =null ;
-        
-        try {
-        
-             //phase1
-             //count  a number of features and lines
-             File file = new File("dataset.txt");
-             Scanner sc = new Scanner(file);
-             while (sc.hasNextLine()) {
-                    a =  sc.nextLine().split("\\s");
-                    cntFeature = a.length;
-                    cntLine++;
-             } 
-              sc.close();
-              
-              //create an array that contain a SD
-              Double[] arrayOfSD = new Double[cntFeature];
-              
-              //create an array that contain a Mean
-              Double[] arrayOfMean = new Double[cntFeature];
-              
-              //create an array that contain  a normalizated data
-              Double[] normalData = new Double[cntFeature];
-             
-              //create an array that contain every feature
-              Double[][] feature = new Double[cntFeature][cntLine];
-  
-              //phase2 process a file
-               RandomAccessFile fileA = new RandomAccessFile("dataset.txt", "r");
-               String[] line ;
-               for(int i=0;i<cntLine;i++){
-                    
-                     line = fileA.readLine().split("\\s");
-                    
-                    for(int j=0;j<line.length;j++) {
-          
-                              feature[j][i] = Double.parseDouble(line[j]);
-                              
-                    }
-               }
-               
-               //print it out
-               Double[] theFeature = new Double[cntLine];
-               for(int i=0;i<cntFeature;i++){
-                    //System.out.println(""+(i+1)+" feature");
-                    
-                    //get the pre data into array(theFeature) for calculate SD and MEAN
-                    for(int j=0;j<cntLine;j++) {
-                        theFeature[j] = feature[i][j] ;
-                    }
-                    
-                    //print out a 12 data in one feature
-                    /**
-                    for(int j=0;j<cntLine;j++) {
-                        System.out.println(theFeature[j]);
-                    }
-               **/     
-                    //print out a SD and Mean of 12 Data
-                    arrayOfMean[i] = calculateMean(theFeature) ;
-                    arrayOfSD[i] = calculateSD(theFeature) ;
-               }
-            
-               for(int i=0; i < cntFeature ;i++) {
-                   normalData[i] = (b[i] - arrayOfMean[i])/arrayOfSD[i];
-               }
-               
-               result = normalData;
-               
-        } catch(IOException e) {
-            e.printStackTrace();
-        } 
-        
-        if(result == null) {
-            Double[] arr = new Double[] {404.0,404.0};
-            //System.out.println("Unreach");
-            return arr ;
-        } else {
-            //System.out.println("reach!!");
-            return result;
+
+    private void normalizedData(float[][] feature_vectors, float[] mean_vector, float[] std_vector){
+        int row = feature_vectors.length;
+        int col = feature_vectors[0].length;
+        float[][] temp_vectors = new float[row][col];
+
+        for (int i=0; i<row; i++){
+            for (int j=0; j<col; j++){
+                if(std_vector[j] !=0) {
+                    temp_vectors[i][j] = (feature_vectors[i][j] - mean_vector[j]) / std_vector[j];
+                }else{
+                    temp_vectors[i][j] = (feature_vectors[i][j] - mean_vector[j]);
+                }
+
+            }
         }
-        
+        this.normalized_feature_vectors = temp_vectors;
     }
-    
 
+    private void normalize_input_feature(float[] input_vector, float[] mean_vector, float[] std_vector){
+        float[] temp_vector = new float[input_vector.length];
+        for (int i=0; i<input_vector.length; i++){
+            if (std_vector[i]!=0) {
+                temp_vector[i] = (input_vector[i] - mean_vector[i]) / std_vector[i];
+            }else{
+                temp_vector[i] = (input_vector[i] - mean_vector[i]);
+            }
+        }
+        this.normalized_input_vector = temp_vector;
+    }
+
+    private void calculate_Histogram_Distance(float[] normalized_input_vector, float[][] normalized_feature_vectors){
+        //Generate Distance Matrix
+        int row = normalized_feature_vectors.length;
+        int col = normalized_feature_vectors[0].length;
+        float[][] temp_matrix = new float[row][col];
+        distanceCalculation_euclideanDistance = new float[row];
+        distanceCalculation_intersectionDistance = new float[row];
+        distanceCalculation_chiSquareDistance = new float[row];
+        distanceCalculation_correlationDistance = new float[row];
+
+        DistanceCalculation distanceCalculation;
+        //Calculate Distance for each row
+        for (int i=0;i<row;i++){
+            float[] normalized_feature_vectors_row = new float[normalized_feature_vectors[i].length];
+            for(int j=0;j<col;j++){
+                normalized_feature_vectors_row[j] = normalized_feature_vectors[i][j];
+            }
+            //Calculate Distance
+            distanceCalculation = new DistanceCalculation(normalized_feature_vectors_row, normalized_input_vector);
+            distanceCalculation_euclideanDistance[i] = distanceCalculation.euclideanDistance(normalized_feature_vectors_row, normalized_input_vector);
+            distanceCalculation_intersectionDistance[i] = distanceCalculation.intersectionDistance(normalized_feature_vectors_row, normalized_input_vector);
+            distanceCalculation_chiSquareDistance[i] = distanceCalculation.chiSquareDistance(normalized_feature_vectors_row, normalized_input_vector);
+            distanceCalculation_correlationDistance[i] = distanceCalculation.correlationDistance(normalized_feature_vectors_row, normalized_input_vector);
+        }
+    }
+
+    private void calculate_Average_Histogram_Distance(float[] euclideanDistance, float[] intersectionDistance, float[] chiSquareDistance, float[] correlationDistance){
+        int row = euclideanDistance.length;
+        float[] sum_values = new float[4];
+        for (int i=0; i<row;i++){
+            sum_values[0] += euclideanDistance[i];
+            sum_values[1] += intersectionDistance[i];
+            sum_values[2] += chiSquareDistance[i];
+            sum_values[3] += correlationDistance[i];
+        }
+        average_euclidean_distance_vector = sum_values[0]/row;
+        average_intersectionDistance_vector = sum_values[1]/row;
+        average_chiSquareDistance_vector = sum_values[2]/row;
+        average_correlationDistance_vector = sum_values[3]/row;
+        total_average_distance_vector = average_euclidean_distance_vector + average_intersectionDistance_vector + average_chiSquareDistance_vector + average_correlationDistance_vector;
+    }
 }
