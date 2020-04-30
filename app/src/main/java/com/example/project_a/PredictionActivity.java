@@ -215,15 +215,17 @@ public class PredictionActivity extends AppCompatActivity {
         uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = {MediaStore.MediaColumns.DATA,
                 MediaStore.Images.Media.BUCKET_DISPLAY_NAME };
-
         cursor = PredictionActivity.this.getContentResolver().query(uri, projection, null,
                 null, null);
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
         column_index_folder_name = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
 
         while (cursor.moveToNext()) {
-            absolutePathOfImage = cursor.getString(column_index_data);
-            temp_listOfAllImages.add(absolutePathOfImage);
+            if (String.valueOf(cursor.getString(column_index_folder_name)).equals("Demo")) {
+                //Log.d(TAG, String.valueOf(cursor.getString(column_index_folder_name)));
+                absolutePathOfImage = cursor.getString(column_index_data);
+                temp_listOfAllImages.add(absolutePathOfImage);
+            }
         }
         //Remove the current file
         for (int i=0; i<temp_listOfAllImages.size();i++){
